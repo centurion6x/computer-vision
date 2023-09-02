@@ -22,6 +22,13 @@ def main():
         resampledImg = resampleImage(img=grayImg, scale=scale)
         print("Resampling complete, saving resampled image as resampled_" + fileName + ".")
         saveImageRaw(img=resampledImg, fileName="resampled_" + fileName)
+        print("Resampling back to original size...")
+        resampledBackImg = resampleImage(
+            img=resampledImg.tolist(), scale=1/scale)
+        print(
+            "Resampling complete, saving resampled image as resampledBack_" + fileName + ".")
+        saveImageRaw(img=resampledBackImg,
+                     fileName="resampledBack_" + fileName)
         choice = input("Would you like to convert another image? (y/n): ")
         if choice == "n":
             print("Thank you for using this tool.")
@@ -134,8 +141,11 @@ def resampleImage(img: list, scale: float):
             dx2 = x2 - x
             dy1 = y - y1
             dy2 = y2 - y
+            denom = ((x2-x1)*(y2-y1))
+            if denom == 0:
+                denom = 1
             Q = (Q11*dx2*dy2 + Q21*dx1*dy2 + Q12*dx2 *
-                 dy1 + Q22*dx1*dy1) / ((x2-x1)*(y2-y1))
+                 dy1 + Q22*dx1*dy1) / denom
             outputImage[i, j] = Q
     return outputImage
 
