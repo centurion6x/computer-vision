@@ -16,6 +16,12 @@ def main():
         print("Conversion complete, saving grayscale image.")
         saveImage(img=grayImg, fileName="grayscale_" + fileName)
         print("Grayscale image saved as grayscale_" + fileName)
+        scale = float(
+            input("Enter the scale to which the image is to be resampled: "))
+        print("Resampling image...")
+        resampledImg = resampleImage(img=grayImg, scale=scale)
+        print("Resampling complete, saving resampled image as resampled_" + fileName + ".")
+        saveImageRaw(img=resampledImg, fileName="resampled_" + fileName)
         choice = input("Would you like to convert another image? (y/n): ")
         if choice == "n":
             print("Thank you for using this tool.")
@@ -73,6 +79,65 @@ def saveImage(img: list, fileName: str):
     grayArray = grayArray.astype(np.uint8)
     print("conversion done !")
     imageio.v2.imwrite(fileName, grayArray)
+
+
+def saveImageRaw(img: np.ndarray, fileName: str):
+    """
+    Saves the provided image as a file with the provided file name
+
+    Parameters:
+    img (ndarray): A numpy array
+    fileName (str): The name of the file to be saved
+    """
+    imageio.v2.imwrite(fileName, img)
+
+
+def resampleImage(img: list, scale: float):
+    """
+    Resamples the image using linear interpolation to rescale to the 
+    given scale. 
+
+    Parameters: 
+    img (list): A list of lists
+    scale (float): The scale to which the result is created
+
+    Returns:
+    outputImage (nparray): A numpy array of the resampled image
+    """
+    imgArray = imageio.core.util.asarray(img)
+    imgArray = imgArray.astype(np.uint8)
+    height, width = imgArray.shape
+    newHeight = int(height*scale)
+    newWidth = int(width*scale)
+    outputImage = np.zeros((newHeight, newWidth), dtype=np.uint8)
+    for i in range(newHeight):
+        for j in range(newWidth):
+            x = j/scale
+            y = i/scale
+            x1 = int(np.floor(x))
+            x2 = int(np.ceil(x))
+            y1 = int(np.floor(y))
+            y2 = int(np.ceil(y))
+            if x1 == x2:
+                x2 += 1
+            if y1 == y2:
+                y2 += 1
+            if x2 >= width:
+                x2 = width - 1
+            if y2 >= height:
+                y2 = height - 1
+            Q11 = imgArray[y1, x1]
+            Q12 = imgArray[y2, x1]
+            Q21 = imgArray[y1, x2]
+            Q22 = imgArray[y2, x2]
+            dx1 = x - x1
+            dx2 = x2 - x
+            dy1 = y - y1
+            dy2 = y2 - y
+            Q = (Q11*dx2*dy2 + Q21*dx1*dy2 + Q12*dx2 *
+                 dy1 + Q22*dx1*dy1) / ((x2-x1)*(y2-y1))
+            outputImage[i, j] = Q
+    return outputImage
 
 
 if __name__ == "__main__":
