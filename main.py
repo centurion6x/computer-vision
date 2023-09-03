@@ -1,3 +1,4 @@
+from math import ceil, floor
 import imageio
 import numpy as np
 
@@ -29,6 +30,9 @@ def main():
             "Resampling complete, saving resampled image as resampledBack_" + fileName + ".")
         saveImageRaw(img=resampledBackImg,
                      fileName="resampledBack_" + fileName)
+        print("Calculating error...")
+        calculateDifferenceStats(
+            originalImg=grayImg, finalResampledImg=resampledBackImg)
         choice = input("Would you like to convert another image? (y/n): ")
         if choice == "n":
             print("Thank you for using this tool.")
@@ -84,7 +88,6 @@ def saveImage(img: list, fileName: str):
     """
     grayArray = imageio.core.util.asarray(img)
     grayArray = grayArray.astype(np.uint8)
-    print("conversion done !")
     imageio.v2.imwrite(fileName, grayArray)
 
 
@@ -125,6 +128,7 @@ def resampleImage(img: list, scale: float):
             x2 = int(np.ceil(x))
             y1 = int(np.floor(y))
             y2 = int(np.ceil(y))
+
             if x1 == x2:
                 x2 += 1
             if y1 == y2:
@@ -148,6 +152,31 @@ def resampleImage(img: list, scale: float):
                  dy1 + Q22*dx1*dy1) / denom
             outputImage[i, j] = Q
     return outputImage
+
+
+def calculateDifferenceStats(originalImg: list, finalResampledImg: np.ndarray):
+    """
+    Calculates the MSE of the final resampled image in the original size. 
+
+    Parameters:
+    originalImg (list): A list of lists of lists with orginal grayscale image
+    finalResampledImg (nparray): A numpy array with the final resampled image
+    """
+    originalImgArray = imageio.core.util.asarray(originalImg)
+    originalImgArray = originalImgArray.astype(np.uint8)
+    ((originalHeight, originalWidth), (resampledHeight, resampledWidth)) = (
+        originalImgArray.shape, finalResampledImg.shape)
+    if originalHeight > resampledHeight:
+        difference = originalHeight - resampledHeight
+        deleteRowArray = [i for i in range(difference)]
+        originalImgArray = np.delete(originalImgArray, deleteRowArray, axis=0)
+    if originalWidth > resampledWidth:
+        difference = originalWidth - resampledWidth
+        deleteColumnArray = [i for i in range(difference)]
+        originalImgArray = np.delete(
+            originalImgArray, deleteColumnArray, axis=1)
+    MSE = np.mean((originalImgArray - finalResampledImg)**2)
+    print("MSE: ", MSE)
 
 
 if __name__ == "__main__":
