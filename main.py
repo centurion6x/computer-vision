@@ -72,7 +72,7 @@ def convertToGrayscale(img: list):
     for row in img:
         grayRow = []
         for pixel in row:
-            grayValue = int(sum(pixel)/3)
+            grayValue = int(pixel[0]*0.21 + pixel[1]*0.72 + pixel[2]*0.07)
             grayRow.append(grayValue)
         grayImage.append(grayRow)
     return grayImage
